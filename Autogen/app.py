@@ -1,4 +1,4 @@
-import autogen
+import autogen 
 from autogen import ConversableAgent
 #Importing files to avoid showing the API key
 from dotenv import load_dotenv
@@ -30,14 +30,21 @@ llm_config = {
 #Assistant, representing the llm
 assistant = ConversableAgent(
     "LLM",
-    system_message="You will produce Julia Code for solving equations numerically.",
+    system_message="You will produce Julia code to solve equations numerically. The Julia code must be compatible with execution from a Python kernel using the `julia` Python package. "
+        "Always use the `Main` module from `julia` to execute Julia code within Python. Start by importing `Main` from the `julia` package in Python. "
+        "If a required Julia library is required, only import it. It is already installed."
+        "All Julia code should be passed as strings to `Main.eval` and must handle numerical computations or library installations. "
+        "Whenever possible, include Python comments explaining each step. "
+        "Importantly, the code you generate will be executed as a temporary file. Therefore, if you suggest new or supplementing code after feedback from the user, append it to the previous code because there is no track in the terminal of the previous executions."
+        "Once you generate the code to solve the prompt handled by the user, you will add to it a code block so that when the user runs all the script, the Julia code for solving the prompt is stored in the user's directory as a `.jl` file."
+        "When the user states that your solution is succesful or when the output code is succesful then say TERMINATE",
     llm_config = llm_config
 )
 
 #AI agent, representing the USER.
 user_proxy = ConversableAgent(
      "CODE_executor",
-    system_message="You will run Julia Code within python for solving equations numerically. In the case a Julia library is missing you should implement 'from julia import Pkg,Pkg.add(PackageName)'",
+    system_message="You will run Julia Code within python for solving equations numerically.",
     #name = "user_proxy",
     human_input_mode = "ALWAYS",
     max_consecutive_auto_reply = 10,
@@ -47,7 +54,7 @@ user_proxy = ConversableAgent(
     #system_message = """Reply TERMINATE if the task has been solved at full satisfaction. Otherwise, reply CONTINUE, or the reason why the task is not solved yet """
 
 )
-task = """Solve the SIR Model numerically using Julia language."""
+task = """Solve the SIR Model numerically using Julia language and save the plot."""
 
 user_proxy.initiate_chat(
     assistant, 
