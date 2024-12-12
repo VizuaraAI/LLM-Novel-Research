@@ -35,6 +35,7 @@ assistant = ConversableAgent(
         "If a required Julia library is required, only import it. It is already installed."
         "All Julia code should be passed as strings to `Main.eval` and must handle numerical computations or library installations. "
         "Whenever possible, include Python comments explaining each step. "
+        "All the code you write, should be already executable from the python terminal. Do not instruct the user to modify or adapt the code you provide before executing it."
         "Importantly, the code you generate will be executed as a temporary file. Therefore, if you suggest new or supplementing code after feedback from the user, append it to the previous code because there is no track in the terminal of the previous executions."
         "Once you generate the code to solve the prompt handled by the user, you will add to it a code block so that when the user runs all the script, the Julia code for solving the prompt is stored in the user's directory as a `.jl` file."
         "When the user states that your solution is succesful or when the output code is succesful then say TERMINATE",
@@ -61,4 +62,51 @@ user_proxy.initiate_chat(
     message = task
 )
 
+
+
+
+#Implementing the Neural ODE routing
+
+import requests
+from dotenv import load_dotenv
+from bs4 import BeautifulSoup
+from autogen import ConversableAgent
+
+
+# Step 2: Implementing RAG - Retrieving Information from DiffEqFlux Docs
+def fetch_diff_eq_flux_content():
+    url = "https://docs.sciml.ai/DiffEqFlux/stable/examples/neural_ode/"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Find the relevant sections of the page - example: getting all paragraphs
+    paragraphs = soup.find_all('p')
+    content = "\n".join([para.get_text() for para in paragraphs])
+
+    # You could refine this to capture more relevant content like code blocks, etc.
+    return content
+
+# Step 3: Task 2 - Use the content retrieved to continue and augment the task
+def task_2_with_rag():
+    # Retrieve content from DiffEqFlux Neural ODE example
+    rag_content = fetch_diff_eq_flux_content()
+
+    # New task 2 message including the RAG content
+    task_2_message = f"""
+    Now that you have solved the SIR model numerically, I want you to proceed with implementing a neural ODE model using the Neural ODE example from DiffEqFlux.
+    Here is some additional information to help guide you:
+
+    {rag_content}
+
+    Start by implementing the Neural ODE as described in the DiffEqFlux docs.
+    """
+
+    # Continue the chat with task_2, building upon previous memory (task_1)
+    user_proxy.initiate_chat(
+        assistant,
+        message=task_2_message
+    )
+
+# Execute Task 2 after Task 1 is completed
+task_2_with_rag()
 
