@@ -1,28 +1,31 @@
 
-using DifferentialEquations, Plots
+    # Define the SIR model parameters and initial conditions
+    b = 0.1
+    g = 0.05
+    S0 = 0.99
+    I0 = 0.01
+    R0 = 0.0
+    tspan = (0.0, 200.0)
 
-function sir_ode!(du, u, p, t)
-    S, I, R = u
-    beta, gamma = p
-    du[1] = -beta*S*I
-    du[2] = beta*S*I - gamma*I
-    du[3] = gamma*I
-end
+    # Define the SIR model ODEs
+    function sir_ode!(du, u, p, t)
+        S, I, R = u
+        b, g = p
+        du[1] = -b*S*I
+        du[2] = b*S*I - g*I
+        du[3] = g*I
+    end
 
-S0 = 0.99
-I0 = 0.01
-R0 = 0.0
-u0 = [S0, I0, R0]
+    # Solve the SIR model ODEs numerically
+    using DifferentialEquations
 
-beta = 0.5
-gamma = 0.1
-p = [beta, gamma]
+    u0 = [S0, I0, R0]
+    p = [b, g]
+    prob = ODEProblem(sir_ode!, u0, tspan, p)
+    sol = solve(prob)
 
-tspan = (0.0, 60.0)
+    # Plot the solution
+    using Plots
 
-prob = ODEProblem(sir_ode!, u0, tspan, p)
-
-sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
-
-plot(sol, xlabel="Time", ylabel="Proportion", title="SIR Model", lw=2)
-savefig("sir_model_plot.png")
+    plot(sol, xlabel="Time", ylabel="Proportions", title="SIR Model")
+    
